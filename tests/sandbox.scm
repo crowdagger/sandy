@@ -6,7 +6,7 @@
 
 (test-begin "Sandbox")
 (test-group "get/set"
-  (define g make-grid 3 10)
+  (define g (make-grid 3 10))
   (test-assert "Succesful set" (grid-set! g 1 3 'pouet))
   (test-assert "Succesful set" (grid-set! g 2 4 'pouet))
   (test-eqv "OOB set returns false" #f (grid-set g 1 11 'pouet))

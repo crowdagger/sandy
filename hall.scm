@@ -18,9 +18,12 @@
      (licensing #f)))
   (files (libraries
            ((scheme-file "sandy")
-            (directory "sandy" ((scheme-file "sandbox")))))
+            (directory
+              "sandy"
+              ((scheme-file "sandbox") (scheme-file "hconfig")))))
          (tests ((directory "tests" ((scheme-file "sandbox")))))
-         (programs ((directory "scripts" ((scheme-file "sandy.scm"))))
+         (programs
+           ((directory "scripts" ((scheme-file "sandy")))))
          (documentation
            ((org-file "README")
             (symlink "README" "README.org")
@@ -28,6 +31,4 @@
             (text-file "COPYING")
             (directory "doc" ((texi-file "sandy")))))
          (infrastructure
-           ((scheme-file "guix")
-            (text-file ".gitignore")
-            (scheme-file "hall")))))
+           ((scheme-file "guix") (scheme-file "hall")))))
