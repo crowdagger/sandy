@@ -5,6 +5,7 @@
   (gnu packages guile-xyz)
   (gnu packages pkg-config)
   (gnu packages texinfo)
+  (gnu packages game-development)
   (guix build-system gnu)
   (guix download)
   (guix gexp)
@@ -29,7 +30,7 @@
   (arguments `())
   (native-inputs
     (list autoconf automake pkg-config texinfo))
-  (inputs (list guile-3.0))
+  (inputs (list guile-3.0 guile-chickadee))
   (propagated-inputs (list))
   (synopsis "")
   (description "")

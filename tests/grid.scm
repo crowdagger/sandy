@@ -2,9 +2,9 @@
 
 (import (scheme base)
         (srfi srfi-64)
-        (sandy sandbox))
+        (sandy grid))
 
-(test-begin "Sandbox")
+(test-begin "Grid")
 (test-group "get/set"
   (define g (make-grid 3 10))
   (test-assert "Succesful set" (grid-set! g 1 3 'pouet))
@@ -14,4 +14,4 @@
   (test-eqv "Unset value is not set" 'empty (grid-get g 0 3))
   )
 
-(test-end "Sandbox")
+(test-end "Grid")

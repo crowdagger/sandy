@@ -9,19 +9,19 @@
   (description "")
   (home-page "")
   (license gpl3+)
-  (dependencies `())
+  (dependencies ())
   (skip ())
   (features
-    ((guix #f)
-     (use-guix-specs-for-dependencies #f)
+    ((guix #t)
+     (use-guix-specs-for-dependencies #t)
      (native-language-support #f)
      (licensing #f)))
   (files (libraries
            ((scheme-file "sandy")
             (directory
               "sandy"
-              ((scheme-file "sandbox") (scheme-file "hconfig")))))
-         (tests ((directory "tests" ((scheme-file "sandbox")))))
+              ((scheme-file "grid") (scheme-file "hconfig")))))
+         (tests ((directory "tests" ((scheme-file "grid")))))
          (programs
            ((directory "scripts" ((scheme-file "sandy")))))
          (documentation

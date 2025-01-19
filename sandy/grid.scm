@@ -1,6 +1,6 @@
 (install-r7rs!)
 
-(define-library (sandy sandbox)
+(define-library (sandy grid)
   (import (scheme base)
           (srfi srfi-43))
   (export check-ints check-posints
@@ -104,9 +104,4 @@ Returns #f if (row col) was OOB"
                        (cons (list val r c) curr))))])
         (vector-fold f '() (grid-inner g))))
     ))
-            
-        
-;; (define (sandbox rows cols)
-;;   "Create a new, empty sandbox"
-;;   (make-vector (* m n)
-;;                ))
+
