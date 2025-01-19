@@ -4,6 +4,7 @@
         (chickadee)
         (chickadee graphics path)
         (chickadee graphics text)
+        (chickadee graphics color)
         (chickadee math vector)
         (chickadee scripting))
 
@@ -19,13 +20,24 @@
           (/ 1.0 avg-frame-time)
           (window-width (current-window))))
 
+
+(define canvas (make-empty-canvas))
+
 (define (load)
   (script
    (forever
     (sleep 60)
+    (set-canvas-painter! canvas (rect-painter))
     (set! stats-text (stats-message)))))
 
+(define (rect-painter)
+  (with-style ((fill-color (string->color "#FF0000")))
+              (fill
+               (rectangle (vec2 100.0 100.0) 1080.0 520.0))))
+
+
 (define (draw alpha)
+  (draw-canvas canvas)
   (let* ([width (window-width (current-window))]
          [height (window-height (current-window))]
          [position (vec2 (/ width 2.0)
