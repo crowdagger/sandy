@@ -20,7 +20,10 @@
            ((scheme-file "sandy")
             (directory
               "sandy"
-              ((scheme-file "grid") (scheme-file "hconfig")))))
+              ((scheme-file "grid") (scheme-file "hconfig")))
+            (directory
+             "crow-utils"
+             ((scheme-file "defn")))))
          (tests ((directory "tests" ((scheme-file "grid")))))
          (programs
            ((directory "scripts" ((scheme-file "sandy")))))
