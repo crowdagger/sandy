@@ -18,9 +18,9 @@
      (licensing #f)))
   (files (libraries
            ((scheme-file "sandy")
-            (directory "sandy" ((scheme-file "hconfig")))))
-         (tests ((directory "tests" ())))
-         (programs ((directory "scripts" ())))
+            (directory "sandy" ((scheme-file "sandbox")))))
+         (tests ((directory "tests" ((scheme-file "sandbox")))))
+         (programs ((directory "scripts" ((scheme-file "sandy.scm"))))
          (documentation
            ((org-file "README")
             (symlink "README" "README.org")
