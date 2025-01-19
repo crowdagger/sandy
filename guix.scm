@@ -29,7 +29,7 @@
   (arguments `())
   (native-inputs
     (list autoconf automake pkg-config texinfo))
-  (inputs (list guile-3.0))
+  (inputs (list guile-3.0 guile-chickadee))
   (propagated-inputs (list))
   (synopsis "")
   (description "")
