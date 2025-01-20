@@ -1,20 +1,14 @@
-(install-r7rs!)
-
 (define-library (sandy grid)
   (import (scheme base)
           (srfi srfi-43)
-          (crow-utils checked))
+          (crow-utils checked)
+          (sandy types))
   (export check-ints check-posints
           make-grid grid-cols grid-rows grid?
           grid-empty grid-get grid-set!
           grid-get-all grid-mapper-inverse)
   (begin
-    (define (any? x)
-      #t)
-    (define (posint? x)
-      (and (integer? x) (>= x 0)))
-    
-    (define (check-ints i j)
+     (define (check-ints i j)
       "Check that both numbers are integers. 
 If not, sends an error."
       (unless

@@ -6,7 +6,9 @@
         (chickadee graphics text)
         (chickadee graphics color)
         (chickadee math vector)
-        (chickadee scripting))
+        (chickadee scripting)
+        (sandy sandbox)
+        (sandy grid))
 
 (define start-time 0.0)
 (define avg-frame-time 16.0)
@@ -21,6 +23,7 @@
           (window-width (current-window))))
 
 
+(define sandbox (make-sandbox 20 20 1280 720))
 (define canvas (make-empty-canvas))
 
 (define (load)
@@ -51,6 +54,8 @@
       (set! start-time current-time))))
 
 (define (update dt)
+  (newline)
+  (display (grid-get-all (sandbox-grid sandbox)))
   (update-agenda 1))
 
 (define (key-press key modifiers repeat?)
