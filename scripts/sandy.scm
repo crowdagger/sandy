@@ -30,7 +30,7 @@
   (script
    (forever
     (sleep 60)
-    (set-canvas-painter! canvas (rect-painter))
+ ;   (set-canvas-painter! canvas (rect-painter))
     (set! stats-text (stats-message)))))
 
 (define (rect-painter)
@@ -54,8 +54,17 @@
       (set! start-time current-time))))
 
 (define (update dt)
-  (newline)
   (display (grid-get-all (sandbox-grid sandbox)))
+  (newline)
+
+  (when (mouse-button-pressed? 'left)
+    (let* ([dx (/ (sandbox-width sandbox) (sandbox-cols sandbox))]
+           [dy (/ (sandbox-height sandbox) (sandbox-rows sandbox))]
+           [c (floor (/ (mouse-x) dx))]
+           [r (floor (/ (mouse-y) dy))])
+      (grid-set! (sandbox-grid sandbox) r c 'sand)
+      (set-canvas-painter! canvas (sandbox-painter sandbox))
+      ))
   (update-agenda 1))
 
 (define (key-press key modifiers repeat?)

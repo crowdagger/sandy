@@ -6,7 +6,9 @@
           (crow-utils checked)
           (sandy grid)
           (sandy types))
-  (export make-sandbox sandbox? sandbox-grid sandbox-painter)
+  (export make-sandbox sandbox? sandbox-grid sandbox-painter
+          sandbox-width sandbox-height sandbox-width! sandbox-height!
+          sandbox-rows sandbox-cols)
   (begin
     ;;; Colors for different elements
     (define c-sand (string->color "#FFFF00"))
@@ -48,15 +50,17 @@
       #:doc "Returns a chickadee painter allowing to draw the sandbox content"
       (let ([dx (/ (sandbox-width s) (sandbox-cols s))]
             [dy (/ (sandbox-height s) (sandbox-rows s))])
-        (map (lambda (e)
-               (let* ([element (car e)]
-                      [row (cadr e)]
-                      [col (caddr e)])
-                 (with-style ((fill-color (symbol->color (cadr e))))
+        (apply superimpose
+               (map (lambda (e)
+                      (let* ([element (car e)]
+                             [row (cadr e)]
+                             [col (caddr e)])
+                        (with-style ((fill-color (symbol->color element)))
                              (fill
                               (rectangle (vec2 (* col dx)
                                                (* row dy))
                                          dx
                                          dy)))))
-             (grid-get-all (sandbox-grid s)))))
-    ))
+                    (grid-get-all (sandbox-grid s))))))
+      ))
+  
