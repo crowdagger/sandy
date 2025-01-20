@@ -58,13 +58,8 @@
   (newline)
 
   (when (mouse-button-pressed? 'left)
-    (let* ([dx (/ (sandbox-width sandbox) (sandbox-cols sandbox))]
-           [dy (/ (sandbox-height sandbox) (sandbox-rows sandbox))]
-           [c (floor (/ (mouse-x) dx))]
-           [r (floor (/ (mouse-y) dy))])
-      (grid-set! (sandbox-grid sandbox) r c 'sand)
-      (set-canvas-painter! canvas (sandbox-painter sandbox))
-      ))
+    (sandbox-set! sandbox (mouse-x) (mouse-y) 'sand)
+    (set-canvas-painter! canvas (sandbox-painter sandbox)))
   (update-agenda 1))
 
 (define (key-press key modifiers repeat?)

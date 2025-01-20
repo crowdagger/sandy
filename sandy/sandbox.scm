@@ -8,7 +8,7 @@
           (sandy types))
   (export make-sandbox sandbox? sandbox-grid sandbox-painter
           sandbox-width sandbox-height sandbox-width! sandbox-height!
-          sandbox-rows sandbox-cols)
+          sandbox-rows sandbox-cols sandbox-set!)
   (begin
     ;;; Colors for different elements
     (define c-sand (string->color "#FFFF00"))
@@ -62,5 +62,18 @@
                                          dx
                                          dy)))))
                     (grid-get-all (sandbox-grid s))))))
+
+    (define-checked (sandbox-set! [s sandbox?]
+                                  [x pos-real?]
+                                  [y pos-real?]
+                                  val)
+      (let* ([y (- (sandbox-height s) y)] ; 0 is at bottom 
+             [dx (/ (sandbox-width s)
+                   (sandbox-cols s))]
+             [dy (/ (sandbox-height s)
+                    (sandbox-rows s))]
+             [c (floor (/ x dx))]
+             [r (floor (/ y dy))])
+        (grid-set! (sandbox-grid s) r c val)))
       ))
   
