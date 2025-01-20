@@ -64,16 +64,21 @@
                     (grid-get-all (sandbox-grid s))))))
 
     (define-checked (sandbox-set! [s sandbox?]
-                                  [x pos-real?]
-                                  [y pos-real?]
+                                  [x real?]
+                                  [y real?]
                                   val)
-      (let* ([y (- (sandbox-height s) y)] ; 0 is at bottom 
+      #:doc "Add an element val at the position where (x,y) points to"
+      ; x and y can be outside the appropriate coordinates
+      (when (and
+               (<= 0 x (sandbox-width s))
+               (<= 0 y (sandbox-height s)))
+        (let* ([y (- (sandbox-height s) y)] ; 0 is at bottom 
              [dx (/ (sandbox-width s)
-                   (sandbox-cols s))]
+                    (sandbox-cols s))]
              [dy (/ (sandbox-height s)
                     (sandbox-rows s))]
              [c (floor (/ x dx))]
              [r (floor (/ y dy))])
-        (grid-set! (sandbox-grid s) r c val)))
+          (grid-set! (sandbox-grid s) r c val))))
       ))
   

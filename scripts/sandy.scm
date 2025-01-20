@@ -15,8 +15,6 @@
 (define stats-text "Pouet")
 (define stats-position (vec2 4.0 100.0))
 (define position (vec2 160.0 240.0))
-(define text "The quick brown fox jumps over the lazy dog.\nFive hexing wizard bots jump quickly.")
-
 (define (stats-message)
   (format #f "fps: ~1,2f, width: ~a"
           (/ 1.0 avg-frame-time)
@@ -45,7 +43,6 @@
          [height (window-height (current-window))]
          [position (vec2 (/ width 2.0)
                          (/ height 2.0))])
-    (draw-text text position)
     (draw-text stats-text stats-position)
     (let ((current-time (elapsed-time)))
       (set! avg-frame-time
@@ -71,7 +68,7 @@
           #:key-press key-press
           #:load load
           #:update update
-          #:window-title "text rendering"
+          #:window-title "=(^·^)="
           #:window-width 1280
           #:window-height 720)
 
