@@ -23,7 +23,7 @@
               ((scheme-file "grid") (scheme-file "hconfig")))
             (directory
              "crow-utils"
-             ((scheme-file "defn")))))
+             ((scheme-file "checked")))))
          (tests ((directory "tests" ((scheme-file "grid")))))
          (programs
            ((directory "scripts" ((scheme-file "sandy")))))

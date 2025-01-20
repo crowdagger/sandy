@@ -2,12 +2,18 @@
 
 (define-library (sandy grid)
   (import (scheme base)
-          (srfi srfi-43))
+          (srfi srfi-43)
+          (crow-utils checked))
   (export check-ints check-posints
           make-grid grid-cols grid-rows grid?
           grid-empty grid-get grid-set!
           grid-get-all grid-mapper-inverse)
   (begin
+    (define (any? x)
+      #t)
+    (define (posint? x)
+      (and (integer? x) (>= x 0)))
+    
     (define (check-ints i j)
       "Check that both numbers are integers. 
 If not, sends an error."
@@ -37,9 +43,8 @@ If not, sends an error."
       (f grid-mapper)
       (f-1 grid-mapper-inverse))
 
-    (define (make-grid rows cols)
-      "Create a 2D grid"
-      (check-posints rows cols)
+    (define-checked (make-grid rows cols)
+      #:doc "Create a 2D grid"
       (let* ([v (make-vector (* rows cols) 'empty)]
              [f (lambda (row col)
                   (check-posints row col)
@@ -49,11 +54,8 @@ If not, sends an error."
                     (floor/ i cols))])
         (_make-grid rows cols v f f-1)))
 
-    (define (grid-get g row col)
-      "Get element at (row, col)"
-      (unless (grid? g)
-        (error "Must be a grid" g))
-      (check-ints row col)
+    (define-checked (grid-get [g grid?] [row integer?] [col integer?])
+      #:doc "Get element at (row, col)"
       (if (or (< row 0)
               (< col 0)
               (>= row (grid-rows g))
@@ -64,12 +66,9 @@ If not, sends an error."
                  [v (grid-inner g)])
             (vector-ref v idx))))
     
-    (define (grid-set! g row col val)
-      "Set element at (row, col)
+    (define-checked (grid-set! [g grid?] [row integer?] [col integer?] [val any?])
+      #:doc "Set element at (row, col)
 Returns #f if (row col) was OOB"
-      (unless (grid? g)
-        (error "Must be a grid" g))
-      (check-ints row col)
       (if (or (< row 0)
               (< col 0)
               (>= row (grid-rows g))
@@ -81,10 +80,8 @@ Returns #f if (row col) was OOB"
             (vector-set! v idx val)
             #t)))
     
-    (define (grid-empty g)
-      "Returns an empty copy of g"
-      (unless (grid? g)
-        (error "Must be a grid" g))
+    (define-checked (grid-empty [g grid?])
+      #:doc "Returns an empty copy of g"
       (let* ([r (grid-rows g)]
             [c (grid-cols g)]
             [v (make-vector (* r c) 'empty)]
@@ -92,10 +89,8 @@ Returns #f if (row col) was OOB"
             [f-1 (grid-mapper-inverse g)])
         (_make-grid r c v f f-1)))
 
-    (define (grid-get-all g)
+    (define-checked (grid-get-all [g grid?])
       "Returns all non empty elements in g, under the form of a list containing (value row col)"
-      (unless (grid? g)
-        (error "Must be a grid" g))
       (let* ([f-1 (grid-mapper-inverse g)]
              [f (lambda (n curr val)
                  (if (eq? val 'empty)
