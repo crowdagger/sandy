@@ -103,18 +103,21 @@
           (grid-empty! (sandbox-delta s)))
 
       (let ([grid (sandbox-data s)]
+            [delta (sandbox-delta s)]
             [rows (sandbox-rows s)]
             [cols (sandbox-cols s)])
-        (let lp-rows ([row 0])
+        (let lp-row ([row 0])
           (unless (>= row rows)
-            (let lp-col ([col 0])
+              (let lp-col ([col 0])
               (unless (>= col cols)
-                (cell-tick grid row col) 
-                ))))))
+                (cell-tick! s row col)
+                (lp-col (+ 1 col))
+                ))
+              (lp-row (+ 1 row))))))
 
-    (define-checked (cell-tick [g grid?]
-                               [r posint?]
-                               [c posint?])
+    (define-checked (cell-tick! [s sandbox?]
+                                [r posint?]
+                                [c posint?])
       #:doc "Update indidual cell (may impact neighbors)"
       ;; In orders for things to not go too bad, we need two
       ;; differents grids : one for live updating, one for checking
@@ -123,15 +126,53 @@
       ;; E.g. if two cells swap positions, these two positions should be marked so as not to be checked twice.
       ;; This should allow for the direct mutation of the grid.
 
-      '() ; todo
-      )
+      (let* ([g (sandbox-data s)]
+             [val (grid-get g r c)])
+        (case (u8->element val)
+          ([empty] '()) ; do nothing for empty cell
+          ([sand] (tick-sand! g s val r c))
+          )))
+
+    (define-checked (tick-sand! [g grid?]
+                                [s sandbox?]
+                                [val u8?]
+                                [r posint?]
+                                [c posint?])
+      #:doc "Update cell sand"
+      (let ([down (grid-get g (- r 1) c)])
+        (cond
+         ((and (eq? down
+                    (element->u8 'empty))
+               (sandbox-check? s (- r 1) c)) 
+          (begin
+            (grid-set! g (- r 1) c val)
+            (grid-set! g r c (element->u8 'empty))
+            (sandbox-check! s r c)
+            (sandbox-check! s (- r 1) c)
+            )))
+         ))
     
-    (define-checked (sandbox-checked [s sandbox?]
-                                     [r posint?]
-                                     [c posint?])
-      #:doc "Check if a cellule has been moved this step already"
-      (if (>= (grid-get (sandbox-delta s) r c))
-          #t
-          #f))
+    (define-checked (sandbox-check? [s sandbox?]
+                                    [r posint?]
+                                    [c posint?])
+      #:doc "Check if a cellule has been moved this step alread: return true if it is ok (if it has NOT been moved)"
+      (if (>= (grid-get (sandbox-delta s) r c)
+              (sandbox-time s))
+          (begin
+            (display "t")
+            #f)
+          (begin
+            (display "t")
+            #t)))
+
+    (define-checked (sandbox-check! [s sandbox?]
+                                    [r posint?]
+                                    [c posint?])
+      #:doc "Mark a cell has having been moved this step"
+      (grid-set! (sandbox-delta s)
+                 r
+                 c
+                 (sandbox-time s)))
+                                       
     ))
   
