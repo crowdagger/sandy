@@ -66,23 +66,23 @@ Returns #f if (row col) was OOB"
       "Returns all non null elements in g, under the form of a list containing (value row col)"
       (define rows (grid-rows g))
       (define cols (grid-cols g))
-      (define (inner g r c acc f)
-        (let* ([next-c (+ c 1)]
-               [next-r (if (= next-c cols)
-                           (+ r 1)
-                           r)]
-               [next-c (if (= next-c cols)
-                           0
-                           next-c)])
-          (if (>= r rows) ; it's done
-              acc
-              (inner g next-r next-c (f r c acc) f))))
-   
+
+      ;; Each value of the list
       (define (f r c acc)
         (let ([val (grid-get g r c)])
           (if (eq? val 0)
               acc
               (cons (list val r c) acc))))
-        (inner g 0 0 '() f))
+
+      (let lp-rows ([row 0]
+                    [acc '()])
+        (if (>= row rows)
+            acc
+            (lp-rows (+ row 1)
+                     (let lp-cols ([col 0]
+                                   [acc acc])
+                       (if (>= col cols)
+                           acc
+                           (lp-cols (+ col 1) (f row col acc))))))))
     ))
 
