@@ -1,84 +1,79 @@
-(install-r7rs!)
+;;; guile-sdl2 --- FFI bindings for SDL2
+;;; Copyright © 2015 David Thompson <davet@gnu.org>
+;;;
+;;; This file is part of guile-sdl2.
+;;;
+;;; Guile-sdl2 is free software; you can redistribute it and/or modify
+;;; it under the terms of the GNU Lesser General Public License as
+;;; published by the Free Software Foundation; either version 3 of the
+;;; License, or (at your option) any later version.
+;;;
+;;; Guile-sdl2 is distributed in the hope that it will be useful, but
+;;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;;; General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU Lesser General Public
+;;; License along with guile-sdl2.  If not, see
+;;; <http://www.gnu.org/licenses/>.
 
 (import (scheme base)
-        (chickadee)
-        (chickadee graphics path)
-        (chickadee graphics text)
-        (chickadee graphics color)
-        (chickadee math vector)
-        (chickadee scripting)
+        (srfi srfi-11)
+        (sdl2)
+        (sdl2 events)
+        (sdl2 rect)
+        (sdl2 render)
+        (sdl2 input keyboard)
+        (sdl2 input mouse)
+        (sdl2 video)
         (sandy sandbox)
         (sandy elements)
         (sandy grid))
 
-(define start-time 0.0)
-(define avg-frame-time 16.0)
-(define stats-text "Pouet")
-(define stats-position (vec2 4.0 100.0))
-(define position (vec2 160.0 240.0))
-(define (stats-message)
-  (format #f "fps: ~1,2f, width: ~a"
-          (/ 1.0 avg-frame-time)
-          (window-width (current-window))))
+
+(sdl-init)
+
+(define window (make-window))
+(define renderer (make-renderer window))
+(define running #t)
 
 
-(define sandbox (make-sandbox 20 20 1280 720))
-(define canvas (make-empty-canvas))
-(define elapsed 0.0)
+(define latest 0)
+(define sandbox (make-sandbox 100 100 640 480))
 
-(define (load)
-  (script
-   (forever
-    (sleep 60)
- ;   (set-canvas-painter! canvas (rect-painter))
-    (set! stats-text (stats-message)))))
+(define (draw ren)
+  (let-values ([(width height) (window-size window)])
+    (sandbox-width! sandbox width)
+    (sandbox-height! sandbox height)
+    (set-renderer-draw-color! ren 0 0 100 255)
+    (clear-renderer ren)
+    (sandbox-draw! sandbox ren)
+    (present-renderer ren)
+    )
+  )
 
-(define (rect-painter)
-  (with-style ((fill-color (string->color "#FF0000")))
-              (fill
-               (rectangle (vec2 100.0 100.0) 1080.0 520.0))))
+(set-window-size! window 1000 1000)
 
+(while running
+  (let* ([current (sdl-ticks)]
+         [delta (- current latest)])
+    (set! latest current)
+    (display delta)
+    (newline)
+    
 
-(define (draw alpha)
-  (draw-canvas canvas)
-  (let* ([width (window-width (current-window))]
-         [height (window-height (current-window))]
-         [position (vec2 (/ width 2.0)
-                         (/ height 2.0))])
-    (draw-text stats-text stats-position)
-    (let ((current-time (elapsed-time)))
-      (set! avg-frame-time
-            (+ (* (- current-time start-time) 0.1)
-               (* avg-frame-time 0.9)))
-      (set! start-time current-time))))
-
-(define (update dt)
-  (update-agenda 1)
-
-  ;;; Only update the sandbox one per...
-  (define update-delay .025)
-  (set! elapsed (+ elapsed dt))
-  (when (> elapsed update-delay)
-    (set! elapsed (- elapsed update-delay))
+    (draw renderer)
+    (usleep 250)
+    (let lp ([event (poll-event)])
+      (when event
+        (cond
+         ((quit-event? event)
+          (set! running #f)))
+        (lp (poll-event))))
+    
     (sandbox-tick! sandbox)
-    (set-canvas-painter! canvas (sandbox-painter sandbox)))
-  (newline)
+    (when (mouse-button-pressed? 'left)
+    (sandbox-set! sandbox (mouse-x) (mouse-y) (element->u8 'sand)))
+    ))
 
-  (when (mouse-button-pressed? 'left)
-    (sandbox-set! sandbox (mouse-x) (mouse-y) (element->u8 'sand))
-    (set-canvas-painter! canvas (sandbox-painter sandbox))))
-
-(define (key-press key modifiers repeat?)
-  (when (eq? key 'q)
-    (abort-game)))
-
-
-(run-game #:draw draw
-          #:key-press key-press
-          #:load load
-          #:update update
-          #:window-title "=(^·^)="
-          #:window-width 1280
-          #:window-height 720)
-
-
+(sdl-quit)

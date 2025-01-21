@@ -1,31 +1,36 @@
 (define-library (sandy sandbox)
   (import (scheme base)
           (scheme write)
-          (chickadee graphics path)
-          (chickadee graphics color)
-          (chickadee math vector)
+          (sdl2)
+          (sdl2 video)
+          (sdl2 render)
+          (sdl2 rect)
           (crow-utils checked)
           (sandy grid)
           (sandy elements)
           (sandy types))
-  (export make-sandbox sandbox? sandbox-painter
+  (export make-sandbox sandbox? sandbox-draw!
           sandbox-width sandbox-height
           sandbox-width! sandbox-height!
           sandbox-rows sandbox-cols sandbox-set!
           sandbox-tick!)
   (begin
     ;;; Colors for different elements
-    (define c-sand (string->color "#FFFF00"))
-    (define c-empty (string->color "#000000"))
+    (define c-sand '(255 255 0 255))
+    (define c-empty '(0 0 0 255))
 
     (define (caddr xs)
       (car (cddr xs)))
     
-    (define-checked (u8->color [x u8?])
-      (case (u8->element x)
-        ('empty c-empty)
-        ('sand c-sand)
-        (else (error "Unsupported element" x))))
+    (define-checked (set-renderer-draw-u8! [ren renderer?]
+                                           [x u8?])
+      (let ([color (case (u8->element x)
+                     ((empty) c-empty)
+                     ((sand) c-sand)
+                     (else (error "Unsupported element" x)))])
+        (apply set-renderer-draw-color!
+               (cons ren
+                     color))))
 
     
     ;;; Sandbox: a grid, plus info on the width/height and so on
@@ -53,28 +58,21 @@
                      width
                      height))
 
-    (define-checked (sandbox-painter [s sandbox?])
+    (define-checked (sandbox-draw! [s sandbox?]
+                                   [ren renderer?])
       #:doc "Returns a chickadee painter allowing to draw the sandbox content"
       (let ([dx (/ (sandbox-width s) (sandbox-cols s))]
             [dy (/ (sandbox-height s) (sandbox-rows s))])
-        (superimpose ;; (with-style ((fill-color (u8->color 0)))
-                     ;;             (fill
-                     ;;              (rectangle
-                     ;;               (vec2 0 0)
-                     ;;               (sandbox-width s)
-                     ;;               (sandbox-height s))))
-                     (apply superimpose
-                            (map (lambda (e)
-                                   (let* ([element (car e)]
-                                          [row (cadr e)]
-                                          [col (caddr e)])
-                                     (with-style ((fill-color (u8->color element)))
-                                                 (fill
-                                                  (rectangle (vec2 (* col dx)
-                                                                   (* row dy))
-                                                             dx
-                                                             dy)))))
-                                 (grid-get-all (sandbox-data s)))))))
+        (for-each (lambda (e)
+                    (let* ([element (car e)]
+                           [row (cadr e)]
+                           [col (caddr e)])
+                      (set-renderer-draw-u8! ren element)
+                      (fill-rect ren (make-rect (round (* col dx))
+                                                (round (* row dy))
+                                                (round dx)
+                                                (round dy)))))
+                  (grid-get-all (sandbox-data s)))))
       
     (define-checked (sandbox-set! [s sandbox?]
                                   [x real?]
@@ -85,7 +83,7 @@
       (when (and
                (<= 0 x (sandbox-width s))
                (<= 0 y (sandbox-height s)))
-        (let* ([y (- (sandbox-height s) y)] ; 0 is at bottom 
+        (let* (;[y (- (sandbox-height s) y)] ; 0 is at bottom 
              [dx (/ (sandbox-width s)
                     (sandbox-cols s))]
              [dy (/ (sandbox-height s)
@@ -139,16 +137,17 @@
                                 [r posint?]
                                 [c posint?])
       #:doc "Update cell sand"
-      (let ([down (grid-get g (- r 1) c)])
+      (let ([down (grid-get g (+ r 1) c)])
         (cond
          ((and (eq? down
                     (element->u8 'empty))
-               (sandbox-check? s (- r 1) c)) 
+               (sandbox-check? s r c)
+               (sandbox-check? s (+ r 1) c)) 
           (begin
-            (grid-set! g (- r 1) c val)
+            (grid-set! g (+ r 1) c val)
             (grid-set! g r c (element->u8 'empty))
             (sandbox-check! s r c)
-            (sandbox-check! s (- r 1) c)
+            (sandbox-check! s (+ r 1) c)
             )))
          ))
     
@@ -158,12 +157,8 @@
       #:doc "Check if a cellule has been moved this step alread: return true if it is ok (if it has NOT been moved)"
       (if (>= (grid-get (sandbox-delta s) r c)
               (sandbox-time s))
-          (begin
-            (display "t")
-            #f)
-          (begin
-            (display "t")
-            #t)))
+          #f
+          #t))
 
     (define-checked (sandbox-check! [s sandbox?]
                                     [r posint?]
