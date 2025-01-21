@@ -131,25 +131,47 @@
           ([sand] (tick-sand! g s val r c))
           )))
 
+    (define-checked (try-swap! [g grid?]
+                               [s sandbox?]
+                               [r1 posint?]
+                               [c1 posint?]
+                               [r2 posint?]
+                               [c2 posint?])
+      #:doc "Try swapping two cells, return #f if failure."
+      (let ([val1 (grid-get g r1 c1)]
+            [val2 (grid-get g r2 c2)])
+        (if (and
+               (sandbox-check? s r1 c1)
+               (sandbox-check? s r2 c2)) 
+             (begin
+               (grid-set! g r1 c1 val2)
+               (grid-set! g r2 c2 val1)
+               (sandbox-check! s r1 c1)
+               (sandbox-check! s r2 c2)
+               #t)
+             #f)))
+
     (define-checked (tick-sand! [g grid?]
                                 [s sandbox?]
                                 [val u8?]
                                 [r posint?]
                                 [c posint?])
       #:doc "Update cell sand"
-      (let ([down (grid-get g (+ r 1) c)])
-        (cond
-         ((and (eq? down
-                    (element->u8 'empty))
-               (sandbox-check? s r c)
-               (sandbox-check? s (+ r 1) c)) 
-          (begin
-            (grid-set! g (+ r 1) c val)
-            (grid-set! g r c (element->u8 'empty))
-            (sandbox-check! s r c)
-            (sandbox-check! s (+ r 1) c)
-            )))
-         ))
+      (let ([down (+ r 1)]
+            [left (- c 1)]
+            [right (+ c 1)])
+        (or
+         ;; If cell below is empty, fall
+         (and (empty? (grid-get g down c))
+              (try-swap! g s r c down c))
+         ;; Else, try falling to the left
+         (and (empty? (grid-get g down left))
+              (try-swap! g s r c down left))
+         (and (empty? (grid-get g down right))
+              (try-swap! g s r c down right))
+         )))
+
+
     
     (define-checked (sandbox-check? [s sandbox?]
                                     [r posint?]
