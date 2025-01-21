@@ -4,7 +4,7 @@
           (crow-utils checked)
           (sandy types))
   (export make-grid grid-cols grid-rows grid?
-          grid-empty grid-get grid-set!
+          grid-empty grid-empty! grid-get grid-set!
           grid-get-all grid-mapper-inverse)
   (begin
     ;;; A 2D grid
@@ -61,6 +61,15 @@ Returns #f if (row col) was OOB"
             [f (grid-mapper g)]
             [f-1 (grid-mapper-inverse g)])
         (_make-grid r c v f f-1)))
+
+    (define-checked (grid-empty! [g grid?])
+      #:doc "Reset the grid to 0"
+      (let* ([v (grid-vector g)]
+            [n (bytevector-length v)])
+        (let lp ([x 0])
+          (when (< x n)
+            (bytevector-u8-set! v x 0)
+            (lp (+ 1 x))))))
 
     (define-checked (grid-get-all [g grid?])
       "Returns all non null elements in g, under the form of a list containing (value row col)"

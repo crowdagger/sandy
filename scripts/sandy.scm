@@ -56,7 +56,7 @@
   (update-agenda 1)
 
   ;;; Only update the sandbox one per...
-  (define update-delay 1.0)
+  (define update-delay .025)
   (set! elapsed (+ elapsed dt))
   (when (> elapsed update-delay)
     (set! elapsed (- elapsed update-delay))

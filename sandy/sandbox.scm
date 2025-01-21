@@ -30,9 +30,11 @@
     
     ;;; Sandbox: a grid, plus info on the width/height and so on
     (define-record-type <sandbox>
-      (_make-sandbox grid rows cols width height)
+      (_make-sandbox elements delta time rows cols width height)
       sandbox?
-      (grid sandbox-grid)
+      (elements sandbox-data)
+      (delta sandbox-delta)
+      (time sandbox-time sandbox-time!)
       (rows sandbox-rows)
       (cols sandbox-cols)
       (width sandbox-width sandbox-width!)
@@ -44,29 +46,36 @@
                                   [height pos-real?])
       #:doc "Creates a new, empty sandbox"
       (_make-sandbox (make-grid rows cols)
+                     (make-grid rows cols)
+                     0
                      rows
                      cols
                      width
                      height))
 
-
     (define-checked (sandbox-painter [s sandbox?])
       #:doc "Returns a chickadee painter allowing to draw the sandbox content"
       (let ([dx (/ (sandbox-width s) (sandbox-cols s))]
             [dy (/ (sandbox-height s) (sandbox-rows s))])
-        (apply superimpose
-               (map (lambda (e)
-                      (let* ([element (car e)]
-                             [row (cadr e)]
-                             [col (caddr e)])
-                        (with-style ((fill-color (u8->color element)))
-                             (fill
-                              (rectangle (vec2 (* col dx)
-                                               (* row dy))
-                                         dx
-                                         dy)))))
-                    (grid-get-all (sandbox-grid s))))))
-
+        (superimpose (with-style ((fill-color (u8->color 0)))
+                                 (fill
+                                  (rectangle
+                                   (vec2 0 0)
+                                   (sandbox-width s)
+                                   (sandbox-height s))))
+                     (apply superimpose
+                            (map (lambda (e)
+                                   (let* ([element (car e)]
+                                          [row (cadr e)]
+                                          [col (caddr e)])
+                                     (with-style ((fill-color (u8->color element)))
+                                                 (fill
+                                                  (rectangle (vec2 (* col dx)
+                                                                   (* row dy))
+                                                             dx
+                                                             dy)))))
+                                 (grid-get-all (sandbox-data s)))))))
+      
     (define-checked (sandbox-set! [s sandbox?]
                                   [x real?]
                                   [y real?]
@@ -83,17 +92,24 @@
                     (sandbox-rows s))]
              [c (floor (/ x dx))]
              [r (floor (/ y dy))])
-          (grid-set! (sandbox-grid s) r c val))))
+          (grid-set! (sandbox-data s) r c val))))
 
     (define-checked (sandbox-tick! [s sandbox?])
       #:doc "Update the content of the sandbox"
       ;; In orders for things to not go too bad, we need two
       ;; differents grids : one for live updating, one for checking
-      ;; whether a move has already be done on the square.
+      ;; whether a move has already be done on the square this turn.
       ;;
       ;; E.g. if two cells swap positions, these two positions should be marked so as not to be checked twice.
       ;; This should allow for the direct mutation of the grid.
-      (display "TODO")
+
+      ;; First, update time and maybe reset delta
+      (sandbox-time! s (+ 1 (sandbox-time s)))
+      (when (> (sandbox-time s) 255)
+          (sandbox-time! s 0)
+          (grid-empty! (sandbox-delta s)))
+      
+      (display (sandbox-time s))
       (newline))
       ))
   
