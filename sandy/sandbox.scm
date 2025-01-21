@@ -1,14 +1,17 @@
 (define-library (sandy sandbox)
   (import (scheme base)
+          (scheme write)
           (chickadee graphics path)
           (chickadee graphics color)
           (chickadee math vector)
           (crow-utils checked)
           (sandy grid)
           (sandy types))
-  (export make-sandbox sandbox? sandbox-grid sandbox-painter
-          sandbox-width sandbox-height sandbox-width! sandbox-height!
-          sandbox-rows sandbox-cols sandbox-set!)
+  (export make-sandbox sandbox? sandbox-painter
+          sandbox-width sandbox-height
+          sandbox-width! sandbox-height!
+          sandbox-rows sandbox-cols sandbox-set!
+          sandbox-tick!)
   (begin
     ;;; Colors for different elements
     (define c-sand (string->color "#FFFF00"))
@@ -80,5 +83,16 @@
              [c (floor (/ x dx))]
              [r (floor (/ y dy))])
           (grid-set! (sandbox-grid s) r c val))))
+
+    (define-checked (sandbox-tick! [s sandbox?])
+      #:doc "Update the content of the sandbox"
+      ;; In orders for things to not go too bad, we need two
+      ;; differents grids : one for live updating, one for checking
+      ;; whether a move has already be done on the square.
+      ;;
+      ;; E.g. if two cells swap positions, these two positions should be marked so as not to be checked twice.
+      ;; This should allow for the direct mutation of the grid.
+      (display "TODO")
+      (newline))
       ))
   

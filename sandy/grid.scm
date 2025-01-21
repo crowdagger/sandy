@@ -3,30 +3,10 @@
           (srfi srfi-43)
           (crow-utils checked)
           (sandy types))
-  (export check-ints check-posints
-          make-grid grid-cols grid-rows grid?
+  (export make-grid grid-cols grid-rows grid?
           grid-empty grid-get grid-set!
           grid-get-all grid-mapper-inverse)
   (begin
-     (define (check-ints i j)
-      "Check that both numbers are integers. 
-If not, sends an error."
-      (unless
-          (and (integer? i)
-               (integer? j))
-        (error "Indices shoud be integers" i j))
-      #t)
-
-    (define (check-posints i j)
-      "Check that two numbers are positive"
-      (unless
-          (and (check-ints i j)
-               (>= i 0)
-               (>= j 0))
-        (error "Indices shoul be positive" i j)))
-
-
-    
     ;;; A 2D vector
     (define-record-type <grid>
       (_make-grid r c v f f-1)
@@ -40,11 +20,10 @@ If not, sends an error."
     (define-checked (make-grid rows cols)
       #:doc "Create a 2D grid"
       (let* ([v (make-vector (* rows cols) 'empty)]
-             [f (lambda (row col)
-                  (check-posints row col)
+             [f (lambda-checked ([row posint?]
+                                 [col posint?])
                   (+ (* row cols) col))]
-             [f-1 (lambda (i)
-                    (check-posints i 0)
+             [f-1 (lambda-checked ([i posint?])
                     (floor/ i cols))])
         (_make-grid rows cols v f f-1)))
 

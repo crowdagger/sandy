@@ -23,6 +23,7 @@
 
 (define sandbox (make-sandbox 20 20 1280 720))
 (define canvas (make-empty-canvas))
+(define elapsed 0.0)
 
 (define (load)
   (script
@@ -51,13 +52,19 @@
       (set! start-time current-time))))
 
 (define (update dt)
-  (display (grid-get-all (sandbox-grid sandbox)))
+  (update-agenda 1)
+
+  ;;; Only update the sandbox one per...
+  (define update-delay 1.0)
+  (set! elapsed (+ elapsed dt))
+  (when (> elapsed update-delay)
+    (set! elapsed (- elapsed update-delay))
+    (sandbox-tick! sandbox))
   (newline)
 
   (when (mouse-button-pressed? 'left)
     (sandbox-set! sandbox (mouse-x) (mouse-y) 'sand)
-    (set-canvas-painter! canvas (sandbox-painter sandbox)))
-  (update-agenda 1))
+    (set-canvas-painter! canvas (sandbox-painter sandbox))))
 
 (define (key-press key modifiers repeat?)
   (when (eq? key 'q)
