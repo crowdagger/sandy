@@ -6,6 +6,7 @@
           (chickadee math vector)
           (crow-utils checked)
           (sandy grid)
+          (sandy elements)
           (sandy types))
   (export make-sandbox sandbox? sandbox-painter
           sandbox-width sandbox-height
@@ -20,11 +21,11 @@
     (define (caddr xs)
       (car (cddr xs)))
     
-    (define-checked (symbol->color [c symbol?])
-      (case c
+    (define-checked (u8->color [x u8?])
+      (case (u8->element x)
         ('empty c-empty)
         ('sand c-sand)
-        (else (error "Unsupported symbol" c))))
+        (else (error "Unsupported element" x))))
 
     
     ;;; Sandbox: a grid, plus info on the width/height and so on
@@ -58,7 +59,7 @@
                       (let* ([element (car e)]
                              [row (cadr e)]
                              [col (caddr e)])
-                        (with-style ((fill-color (symbol->color element)))
+                        (with-style ((fill-color (u8->color element)))
                              (fill
                               (rectangle (vec2 (* col dx)
                                                (* row dy))

@@ -8,6 +8,7 @@
         (chickadee math vector)
         (chickadee scripting)
         (sandy sandbox)
+        (sandy elements)
         (sandy grid))
 
 (define start-time 0.0)
@@ -63,7 +64,7 @@
   (newline)
 
   (when (mouse-button-pressed? 'left)
-    (sandbox-set! sandbox (mouse-x) (mouse-y) 'sand)
+    (sandbox-set! sandbox (mouse-x) (mouse-y) (element->u8 'sand))
     (set-canvas-painter! canvas (sandbox-painter sandbox))))
 
 (define (key-press key modifiers repeat?)
