@@ -13,7 +13,7 @@
       grid?
       (c grid-cols)
       (r grid-rows)
-      (v grid-inner)
+      (v grid-vector)
       (f grid-mapper)
       (f-1 grid-mapper-inverse))
 
@@ -36,7 +36,7 @@
           'empty ; return empty if OOB
           (let* ([f (grid-mapper g)]
                  [idx (f row col)]
-                 [v (grid-inner g)])
+                 [v (grid-vector g)])
             (vector-ref v idx))))
     
     (define-checked (grid-set! [g grid?] [row integer?] [col integer?] [val any?])
@@ -49,7 +49,7 @@ Returns #f if (row col) was OOB"
           #f
           (let* ([f (grid-mapper g)]
                  [idx (f row col)]
-                 [v (grid-inner g)])
+                 [v (grid-vector g)])
             (vector-set! v idx val)
             #t)))
     
@@ -70,6 +70,6 @@ Returns #f if (row col) was OOB"
                      curr
                      (let-values ([[r c] (f-1 n)])
                        (cons (list val r c) curr))))])
-        (vector-fold f '() (grid-inner g))))
+        (vector-fold f '() (grid-vector g))))
     ))
 
