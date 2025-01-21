@@ -7,7 +7,7 @@
           grid-empty grid-get grid-set!
           grid-get-all grid-mapper-inverse)
   (begin
-    ;;; A 2D vector
+    ;;; A 2D grid
     (define-record-type <grid>
       (_make-grid r c v f f-1)
       grid?
@@ -19,7 +19,7 @@
 
     (define-checked (make-grid rows cols)
       #:doc "Create a 2D grid"
-      (let* ([v (make-vector (* rows cols) 'empty)]
+      (let* ([v (make-bytevector (* rows cols) 0)]
              [f (lambda-checked ([row posint?]
                                  [col posint?])
                   (+ (* row cols) col))]
@@ -37,9 +37,9 @@
           (let* ([f (grid-mapper g)]
                  [idx (f row col)]
                  [v (grid-vector g)])
-            (vector-ref v idx))))
+            (bytevector-u8-ref v idx))))
     
-    (define-checked (grid-set! [g grid?] [row integer?] [col integer?] [val any?])
+    (define-checked (grid-set! [g grid?] [row integer?] [col integer?] [val u8?])
       #:doc "Set element at (row, col)
 Returns #f if (row col) was OOB"
       (if (or (< row 0)
@@ -50,26 +50,39 @@ Returns #f if (row col) was OOB"
           (let* ([f (grid-mapper g)]
                  [idx (f row col)]
                  [v (grid-vector g)])
-            (vector-set! v idx val)
+            (bytevector-u8-set! v idx val)
             #t)))
     
     (define-checked (grid-empty [g grid?])
       #:doc "Returns an empty copy of g"
       (let* ([r (grid-rows g)]
             [c (grid-cols g)]
-            [v (make-vector (* r c) 'empty)]
+            [v (make-bytevector (* r c) 0)]
             [f (grid-mapper g)]
             [f-1 (grid-mapper-inverse g)])
         (_make-grid r c v f f-1)))
 
     (define-checked (grid-get-all [g grid?])
-      "Returns all non empty elements in g, under the form of a list containing (value row col)"
-      (let* ([f-1 (grid-mapper-inverse g)]
-             [f (lambda (n curr val)
-                 (if (eq? val 'empty)
-                     curr
-                     (let-values ([[r c] (f-1 n)])
-                       (cons (list val r c) curr))))])
-        (vector-fold f '() (grid-vector g))))
+      "Returns all non null elements in g, under the form of a list containing (value row col)"
+      (define rows (grid-rows g))
+      (define cols (grid-cols g))
+      (define (inner g r c acc f)
+        (let* ([next-c (+ c 1)]
+               [next-r (if (= next-c cols)
+                           (+ r 1)
+                           r)]
+               [next-c (if (= next-c cols)
+                           0
+                           next-c)])
+          (if (>= r rows) ; it's done
+              acc
+              (inner g next-r next-c (f r c acc) f))))
+   
+      (define (f r c acc)
+        (let ([val (grid-get g r c)])
+          (if (eq? val 0)
+              acc
+              (cons (list val r c) acc))))
+        (inner g 0 0 '() f))
     ))
 
