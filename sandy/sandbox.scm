@@ -57,12 +57,12 @@
       #:doc "Returns a chickadee painter allowing to draw the sandbox content"
       (let ([dx (/ (sandbox-width s) (sandbox-cols s))]
             [dy (/ (sandbox-height s) (sandbox-rows s))])
-        (superimpose (with-style ((fill-color (u8->color 0)))
-                                 (fill
-                                  (rectangle
-                                   (vec2 0 0)
-                                   (sandbox-width s)
-                                   (sandbox-height s))))
+        (superimpose ;; (with-style ((fill-color (u8->color 0)))
+                     ;;             (fill
+                     ;;              (rectangle
+                     ;;               (vec2 0 0)
+                     ;;               (sandbox-width s)
+                     ;;               (sandbox-height s))))
                      (apply superimpose
                             (map (lambda (e)
                                    (let* ([element (car e)]
@@ -96,6 +96,26 @@
 
     (define-checked (sandbox-tick! [s sandbox?])
       #:doc "Update the content of the sandbox"
+      ;; First, update time and maybe reset delta
+      (sandbox-time! s (+ 1 (sandbox-time s)))
+      (when (> (sandbox-time s) 255)
+          (sandbox-time! s 0)
+          (grid-empty! (sandbox-delta s)))
+
+      (let ([grid (sandbox-data s)]
+            [rows (sandbox-rows s)]
+            [cols (sandbox-cols s)])
+        (let lp-rows ([row 0])
+          (unless (>= row rows)
+            (let lp-col ([col 0])
+              (unless (>= col cols)
+                (cell-tick grid row col) 
+                ))))))
+
+    (define-checked (cell-tick [g grid?]
+                               [r posint?]
+                               [c posint?])
+      #:doc "Update indidual cell (may impact neighbors)"
       ;; In orders for things to not go too bad, we need two
       ;; differents grids : one for live updating, one for checking
       ;; whether a move has already be done on the square this turn.
@@ -103,13 +123,15 @@
       ;; E.g. if two cells swap positions, these two positions should be marked so as not to be checked twice.
       ;; This should allow for the direct mutation of the grid.
 
-      ;; First, update time and maybe reset delta
-      (sandbox-time! s (+ 1 (sandbox-time s)))
-      (when (> (sandbox-time s) 255)
-          (sandbox-time! s 0)
-          (grid-empty! (sandbox-delta s)))
-      
-      (display (sandbox-time s))
-      (newline))
-      ))
+      '() ; todo
+      )
+    
+    (define-checked (sandbox-checked [s sandbox?]
+                                     [r posint?]
+                                     [c posint?])
+      #:doc "Check if a cellule has been moved this step already"
+      (if (>= (grid-get (sandbox-delta s) r c))
+          #t
+          #f))
+    ))
   

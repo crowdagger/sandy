@@ -60,7 +60,8 @@
   (set! elapsed (+ elapsed dt))
   (when (> elapsed update-delay)
     (set! elapsed (- elapsed update-delay))
-    (sandbox-tick! sandbox))
+    (sandbox-tick! sandbox)
+    (set-canvas-painter! canvas (sandbox-painter sandbox)))
   (newline)
 
   (when (mouse-button-pressed? 'left)
