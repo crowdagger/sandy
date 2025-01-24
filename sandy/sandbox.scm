@@ -1,6 +1,7 @@
 (define-library (sandy sandbox)
   (import (scheme base)
           (scheme write)
+          (srfi srfi-27)
           (sdl2)
           (sdl2 video)
           (sdl2 render)
@@ -157,9 +158,12 @@
                                 [r posint?]
                                 [c posint?])
       #:doc "Update cell sand"
-      (let ([down (+ r 1)]
-            [left (- c 1)]
-            [right (+ c 1)])
+      (let* ([down (+ r 1)]
+             [dir (if (= 0 (random-integer 2))
+                      1
+                      -1)]
+             [left (- c dir)]
+             [right (+ c dir)])
         (or
          ;; If cell below is empty, fall
          (and (empty? (grid-get g down c))
