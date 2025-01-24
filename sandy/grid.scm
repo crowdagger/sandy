@@ -33,7 +33,7 @@
               (< col 0)
               (>= row (grid-rows g))
               (>= col (grid-cols g)))
-          'empty ; return empty if OOB
+          0 ; return empty if OOB
           (let* ([f (grid-mapper g)]
                  [idx (f row col)]
                  [v (grid-vector g)])
