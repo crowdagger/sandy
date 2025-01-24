@@ -36,9 +36,13 @@
 (define window (make-window))
 (define renderer (make-renderer window))
 (define running #t)
+(define ticking #t)
 
 
 (define latest 0)
+(define %min-delay-press 200)
+(define last-key-pressed 0)
+(define last-mouse-pressed 0)
 (define sandbox (make-sandbox 100 100 640 480))
 
 (define (draw ren)
@@ -70,8 +74,22 @@
          ((quit-event? event)
           (set! running #f)))
         (lp (poll-event))))
+
+    (when ticking
+      (sandbox-tick! sandbox))
+
+    (when (key-pressed? 1)
+      (when (> current (+ %min-delay-press last-key-pressed))
+        (set! last-key-pressed current)
+        (display "1 pressed\n")))
     
-    (sandbox-tick! sandbox)
+    (when (mouse-button-pressed? 'right)
+      (when (> current (+ %min-delay-press last-mouse-pressed))
+        (set! last-mouse-pressed current)        
+        (display "Pause/play")
+        (newline)
+        (set! ticking (not ticking))))
+    
     (when (mouse-button-pressed? 'left)
     (sandbox-set! sandbox (mouse-x) (mouse-y) (element->u8 'sand)))
     ))
