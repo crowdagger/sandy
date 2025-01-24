@@ -11,10 +11,11 @@
           (sandy elements)
           (sandy types))
   (export make-sandbox sandbox? sandbox-draw!
+          sandbox-data
           sandbox-width sandbox-height
           sandbox-width! sandbox-height!
           sandbox-rows sandbox-cols sandbox-set!
-          sandbox-tick!)
+          sandbox-tick! sandbox-oob-element!)
   (begin
     ;;; Colors for different elements
     (define c-sand '(255 255 0 255))
@@ -78,7 +79,13 @@
                                                 (round dx)
                                                 (round dy)))))
                   (grid-get-all (sandbox-data s)))))
-      
+
+    (define-checked (sandbox-oob-element! [s sandbox?]
+                                          [e element?])
+      #:doc "Sets the element returned when oob"
+      (grid-set-default! (sandbox-data s)
+                         (element->u8 e)))
+    
     (define-checked (sandbox-set! [s sandbox?]
                                   [x real?]
                                   [y real?]

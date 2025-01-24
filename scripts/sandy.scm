@@ -45,12 +45,15 @@
 (define last-key-pressed 0)
 (define last-mouse-pressed 0)
 (define sandbox (make-sandbox 100 100 640 480))
+(define refresh-delay 20)
+(define last-refresh -1000)
+(sandbox-oob-element! sandbox 'solid)
 
 (define (draw ren)
   (let-values ([(width height) (window-size window)])
     (sandbox-width! sandbox width)
     (sandbox-height! sandbox height)
-    (set-renderer-draw-color! ren 0 0 100 255)
+    (set-renderer-draw-color! ren 30 30 30 255)
     (clear-renderer ren)
     (sandbox-draw! sandbox ren)
     (present-renderer ren)
@@ -77,7 +80,9 @@
         (lp (poll-event))))
 
     (when ticking
-      (sandbox-tick! sandbox))
+      (when (> current (+ last-refresh refresh-delay))
+        (set! last-refresh current)
+        (sandbox-tick! sandbox)))
 
     (when (key-pressed? 1)
       (when (> current (+ %min-delay-press last-key-pressed))
@@ -96,6 +101,12 @@
         (set! last-key-pressed current)
         (set! current-element 'solid)
         (display "Set to solid\n")))
+
+    (when (key-pressed? 0)
+      (when (> current (+ %min-delay-press last-key-pressed))
+        (set! last-key-pressed current)
+        (set! current-element 'empty)
+        (display "Set to empty\n")))
     
     (when (mouse-button-pressed? 'right)
       (when (> current (+ %min-delay-press last-mouse-pressed))

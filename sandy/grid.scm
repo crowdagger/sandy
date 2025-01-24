@@ -5,27 +5,26 @@
           (sandy types))
   (export make-grid grid-cols grid-rows grid?
           grid-empty grid-empty! grid-get grid-set!
-          grid-get-all grid-mapper-inverse)
+          grid-get-all grid-mapper-inverse
+          grid-default grid-set-default!)
   (begin
     ;;; A 2D grid
     (define-record-type <grid>
-      (_make-grid r c v f f-1)
+      (_make-grid r c v f d)
       grid?
       (c grid-cols)
       (r grid-rows)
       (v grid-vector)
       (f grid-mapper)
-      (f-1 grid-mapper-inverse))
+      (d grid-default grid-set-default!))
 
     (define-checked (make-grid rows cols)
       #:doc "Create a 2D grid"
       (let* ([v (make-bytevector (* rows cols) 0)]
              [f (lambda-checked ([row posint?]
                                  [col posint?])
-                  (+ (* row cols) col))]
-             [f-1 (lambda-checked ([i posint?])
-                    (floor/ i cols))])
-        (_make-grid rows cols v f f-1)))
+                  (+ (* row cols) col))])
+        (_make-grid rows cols v f 0)))
 
     (define-checked (grid-get [g grid?] [row integer?] [col integer?])
       #:doc "Get element at (row, col)"
@@ -33,7 +32,7 @@
               (< col 0)
               (>= row (grid-rows g))
               (>= col (grid-cols g)))
-          0 ; return empty if OOB
+          (grid-default g) ; return default if OOB
           (let* ([f (grid-mapper g)]
                  [idx (f row col)]
                  [v (grid-vector g)])
@@ -58,9 +57,8 @@ Returns #f if (row col) was OOB"
       (let* ([r (grid-rows g)]
             [c (grid-cols g)]
             [v (make-bytevector (* r c) 0)]
-            [f (grid-mapper g)]
-            [f-1 (grid-mapper-inverse g)])
-        (_make-grid r c v f f-1)))
+            [f (grid-mapper g)])
+        (_make-grid r c v f 0)))
 
     (define-checked (grid-empty! [g grid?])
       #:doc "Reset the grid to 0"
