@@ -18,7 +18,9 @@
   (begin
     ;;; Colors for different elements
     (define c-sand '(255 255 0 255))
+    (define c-water '(0 0 255 255))
     (define c-empty '(0 0 0 255))
+    (define c-solid '(128 128 128 255))
 
     (define (caddr xs)
       (car (cddr xs)))
@@ -28,6 +30,8 @@
       (let ([color (case (u8->element x)
                      ((empty) c-empty)
                      ((sand) c-sand)
+                     ((water) c-water)
+                     ((solid) c-solid)
                      (else (error "Unsupported element" x)))])
         (apply set-renderer-draw-color!
                (cons ren
@@ -130,27 +134,36 @@
         (case (u8->element val)
           ([empty] '()) ; do nothing for empty cell
           ([sand] (tick-sand! g s val r c))
+          ([water] (tick-water! g s val r c))
           )))
 
     (define-checked (try-swap! [g grid?]
                                [s sandbox?]
-                               [r1 posint?]
-                               [c1 posint?]
-                               [r2 posint?]
-                               [c2 posint?])
+                               [r1 integer?]
+                               [c1 integer?]
+                               [r2 integer?]
+                               [c2 integer?])
       #:doc "Try swapping two cells, return #f if failure."
       (let ([val1 (grid-get g r1 c1)]
-            [val2 (grid-get g r2 c2)])
-        (if (and
-               (sandbox-check? s r1 c1)
-               (sandbox-check? s r2 c2)) 
-             (begin
-               (grid-set! g r1 c1 val2)
-               (grid-set! g r2 c2 val1)
-               (sandbox-check! s r1 c1)
-               (sandbox-check! s r2 c2)
+            [val2 (grid-get g r2 c2)]
+            [rows (sandbox-rows s)]
+            [cols (sandbox-cols s)])
+        ; OOB is considered filled
+        (if (or (<= rows r1 -1)
+                (<= rows r2 -1)
+                (<= cols c1 -1)
+                (<= cols c2 -1))
+            #f
+         (if (and
+                (sandbox-check? s r1 c1)
+                (sandbox-check? s r2 c2)) 
+              (begin
+                (grid-set! g r1 c1 val2)
+                (grid-set! g r2 c2 val1)
+                (sandbox-check! s r1 c1)
+                (sandbox-check! s r2 c2)
                #t)
-             #f)))
+              #f))))
 
     (define-checked (tick-sand! [g grid?]
                                 [s sandbox?]
@@ -166,6 +179,29 @@
              [right (+ c dir)])
         (or
          ;; If cell below is empty, fall
+         (and (empty-or-liquid? (grid-get g down c))
+              (try-swap! g s r c down c))
+         ;; Else, try falling to the left
+         (and (empty-or-liquid? (grid-get g down left))
+              (try-swap! g s r c down left))
+         (and (empty-or-liquid? (grid-get g down right))
+              (try-swap! g s r c down right))
+         )))
+
+    (define-checked (tick-water! [g grid?]
+                                 [s sandbox?]
+                                 [val u8?]
+                                 [r posint?]
+                                 [c posint?])
+      #:doc "Update water cell"
+      (let* ([down (+ r 1)]
+             [dir (if (= 0 (random-integer 2))
+                      1
+                      -1)]
+             [left (- c dir)]
+             [right (+ c dir)])
+        (or
+         ;; If cell below is empty, fall
          (and (empty? (grid-get g down c))
               (try-swap! g s r c down c))
          ;; Else, try falling to the left
@@ -173,22 +209,27 @@
               (try-swap! g s r c down left))
          (and (empty? (grid-get g down right))
               (try-swap! g s r c down right))
+         ;; Else, else try moving to the side
+         (and (empty? (grid-get g r left))
+              (try-swap! g s r c r left))
+         (and (empty? (grid-get g r right))
+              (try-swap! g s r c r right))
          )))
 
 
     
     (define-checked (sandbox-check? [s sandbox?]
-                                    [r posint?]
-                                    [c posint?])
-      #:doc "Check if a cellule has been moved this step alread: return true if it is ok (if it has NOT been moved)"
+                                    [r integer?]
+                                    [c integer?])
+      #:doc "Check if a cellule has been moved this step already: return true if it is ok (if it has NOT been moved)"
       (if (>= (grid-get (sandbox-delta s) r c)
               (sandbox-time s))
           #f
           #t))
 
     (define-checked (sandbox-check! [s sandbox?]
-                                    [r posint?]
-                                    [c posint?])
+                                    [r integer?]
+                                    [c integer?])
       #:doc "Mark a cell has having been moved this step"
       (grid-set! (sandbox-delta s)
                  r

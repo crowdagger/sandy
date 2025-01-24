@@ -39,6 +39,7 @@
 (define ticking #t)
 
 
+(define current-element 'sand)
 (define latest 0)
 (define %min-delay-press 200)
 (define last-key-pressed 0)
@@ -81,7 +82,20 @@
     (when (key-pressed? 1)
       (when (> current (+ %min-delay-press last-key-pressed))
         (set! last-key-pressed current)
-        (display "1 pressed\n")))
+        (set! current-element 'sand)
+        (display "Set to sand\n")))
+
+    (when (key-pressed? 2)
+      (when (> current (+ %min-delay-press last-key-pressed))
+        (set! last-key-pressed current)
+        (set! current-element 'water)
+        (display "Set to water\n")))
+
+    (when (key-pressed? 3)
+      (when (> current (+ %min-delay-press last-key-pressed))
+        (set! last-key-pressed current)
+        (set! current-element 'solid)
+        (display "Set to solid\n")))
     
     (when (mouse-button-pressed? 'right)
       (when (> current (+ %min-delay-press last-mouse-pressed))
@@ -91,7 +105,10 @@
         (set! ticking (not ticking))))
     
     (when (mouse-button-pressed? 'left)
-    (sandbox-set! sandbox (mouse-x) (mouse-y) (element->u8 'sand)))
+    (sandbox-set! sandbox
+                  (mouse-x)
+                  (mouse-y)
+                  (element->u8 current-element)))
     ))
 
 (sdl-quit)
