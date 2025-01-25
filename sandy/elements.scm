@@ -4,7 +4,7 @@
           (crow-utils checked)
           (rnrs enums))
   (export element? element->u8 u8->element
-          empty? empty-or-liquid?)
+          empty? empty-or-liquid? liquid?)
   (begin
     ;;; All  possible box elements
     (define _elements '(empty water sand solid))
@@ -23,4 +23,6 @@
     (define (empty-or-liquid? x)
       "Returns true if x is empty, or liquid"
       (<= x 1))
+    (define (liquid? x)
+      (eq? x 1))
     ))

@@ -185,9 +185,19 @@
              [left (- c dir)]
              [right (+ c dir)])
         (or
+         ;; Chance of idling
+         ; (= 0 (random-integer 2))
          ;; If cell below is empty, fall
-         (and (empty-or-liquid? (grid-get g down c))
+         (and (empty? (grid-get g down c))
               (try-swap! g s r c down c))
+         (and (liquid? (grid-get g down c))
+              ; If below is liquid, chance to idle
+              (if (> (random-real) .5)
+                  #t ; stops the or sequence
+                  (and
+                   ; If below is liquid, chance not to fall straight
+                   (= 0 (random-integer 2))
+                   (try-swap! g s r c down c))))
          ;; Else, try falling to the left
          (and (empty-or-liquid? (grid-get g down left))
               (try-swap! g s r c down left))
