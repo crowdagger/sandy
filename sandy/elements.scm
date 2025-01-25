@@ -3,13 +3,15 @@
           (scheme write)
           (crow-utils checked)
           (rnrs enums)
-          (sdl2 render))
+          (sdl2 render)
+          (sandy types))
   (export element? element->u8 u8->element
           empty? empty-or-liquid? liquid?
+          floats?
           set-renderer-draw-u8!)
   (begin
     ;;; All  possible box elements
-    (define _elements '(empty water sand solid))
+    (define _elements '(empty water sand solid wood))
     
     (define elements (make-enumeration _elements))
     
@@ -35,8 +37,14 @@
     (define (liquid? x)
       (eq? x 1))
 
+    (define (floats? x)
+      (case (u8->element x)
+        ((wood empty) #t)
+        (else #f)))
+
     ;;; Colors for different elements
     (define c-sand '(255 255 0 255))
+    (define c-wood '(145 65 0 0))
     (define c-water '(0 0 255 255))
     (define c-empty '(0 0 0 255))
     (define c-solid '(128 128 128 255))
@@ -49,6 +57,7 @@
                      ((sand) c-sand)
                      ((water) c-water)
                      ((solid) c-solid)
+                     ((wood) c-wood)
                      (else (error "Unsupported element" x)))])
         (apply set-renderer-draw-color!
                (cons ren

@@ -50,6 +50,9 @@
 (sandbox-oob-element! sandbox 'solid)
 
 (define (draw ren)
+  (display (sandbox-number-elements sandbox 'wood))
+  (display " wood")
+  (newline)
   (let-values ([(width height) (window-size window)])
     (sandbox-width! sandbox width)
     (sandbox-height! sandbox height)
@@ -101,6 +104,12 @@
         (set! last-key-pressed current)
         (set! current-element 'solid)
         (display "Set to solid\n")))
+
+    (when (key-pressed? 4)
+      (when (> current (+ %min-delay-press last-key-pressed))
+        (set! last-key-pressed current)
+        (set! current-element 'wood)
+        (display "Set to wood\n")))
 
     (when (key-pressed? 0)
       (when (> current (+ %min-delay-press last-key-pressed))

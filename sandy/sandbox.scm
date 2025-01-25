@@ -2,6 +2,7 @@
   (import (scheme base)
           (scheme write)
           (srfi srfi-27)
+          (srfi srfi-1)
           (sdl2)
           (sdl2 video)
           (sdl2 render)
@@ -15,30 +16,17 @@
           sandbox-width sandbox-height
           sandbox-width! sandbox-height!
           sandbox-rows sandbox-cols sandbox-set!
-          sandbox-tick! sandbox-oob-element!)
+          sandbox-tick! sandbox-oob-element! sandbox-number-elements)
   (begin
-    ;;; Colors for different elements
-    (define c-sand '(255 255 0 255))
-    (define c-water '(0 0 255 255))
-    (define c-empty '(0 0 0 255))
-    (define c-solid '(128 128 128 255))
-
     (define (caddr xs)
       (car (cddr xs)))
-    
-    (define-checked (set-renderer-draw-u8! [ren renderer?]
-                                           [x u8?])
-      (let ([color (case (u8->element x)
-                     ((empty) c-empty)
-                     ((sand) c-sand)
-                     ((water) c-water)
-                     ((solid) c-solid)
-                     (else (error "Unsupported element" x)))])
-        (apply set-renderer-draw-color!
-               (cons ren
-                     color))))
 
-    
+    (define (pk x)
+      (display ";; ")
+      (display x)
+      (newline)
+      x)
+        
     ;;; Sandbox: a grid, plus info on the width/height and so on
     (define-record-type <sandbox>
       (_make-sandbox elements delta time rows cols width height)
@@ -141,8 +129,8 @@
         (case (u8->element val)
           ([empty] '()) ; do nothing for empty cell
           ([sand] (tick-sand! g s val r c))
-          ([water] (tick-water! g s val r c))
-          )))
+          ([wood] (tick-wood! g s val r c))
+          ([water] (tick-water! g s val r c)))))
 
     (define-checked (try-swap! [g grid?]
                                [s sandbox?]
@@ -177,9 +165,9 @@
                                 [val u8?]
                                 [r posint?]
                                 [c posint?])
-      #:doc "Update cell sand"
+      #:doc "Update sand cell"
       (let* ([down (+ r 1)]
-             [dir (if (= 0 (random-integer 2))
+             [dir (if (> 0.5 (random-real))
                       1
                       -1)]
              [left (- c dir)]
@@ -192,16 +180,40 @@
               (try-swap! g s r c down c))
          (and (liquid? (grid-get g down c))
               ; If below is liquid, chance to idle
-              (if (> (random-real) .5)
+              (if (> .5 (random-real))
                   #t ; stops the or sequence
                   (and
                    ; If below is liquid, chance not to fall straight
-                   (= 0 (random-integer 2))
+                   (> .5 (random-real))
                    (try-swap! g s r c down c))))
          ;; Else, try falling to the left
          (and (empty-or-liquid? (grid-get g down left))
               (try-swap! g s r c down left))
          (and (empty-or-liquid? (grid-get g down right))
+              (try-swap! g s r c down right))
+         )))
+
+    (define-checked (tick-wood! [g grid?]
+                                [s sandbox?]
+                                [val u8?]
+                                [r posint?]
+                                [c posint?])
+      #:doc "Update wood cell"
+      (let* ([down (+ r 1)]
+             [dir (if (> .5 (random-real))
+                      1
+                      -1)]
+             [left (- c dir)]
+             [right (+ c dir)])
+        (or
+         ;; Chance of idling
+         ;; If cell below is empty, fall
+         (and (empty? (grid-get g down c))
+              (try-swap! g s r c down c))
+         ;; Else, try falling to the left
+         (and (empty? (grid-get g down left))
+              (try-swap! g s r c down left))
+         (and (empty? (grid-get g down right))
               (try-swap! g s r c down right))
          )))
 
@@ -218,18 +230,22 @@
              [left (- c dir)]
              [right (+ c dir)])
         (or
-         ;; If cell below is empty, fall
-         (and (empty? (grid-get g down c))
-              (try-swap! g s r c down c))
-         ;; Else, try falling to the left
-         (and (empty? (grid-get g down left))
-              (try-swap! g s r c down left))
-         (and (empty? (grid-get g down right))
-              (try-swap! g s r c down right))
+         ;; If cell below is empty or floats, fall
+         ;; only test this half of the time
+         (if (> .5 (random-real))
+             (or 
+               (and (floats? (grid-get g down c))
+                  (try-swap! g s r c down c))
+               ;; Else, try falling to the left
+               (and (floats? (grid-get g down left))
+                    (try-swap! g s r c down left))
+               (and (floats? (grid-get g down right))
+                  (try-swap! g s r c down right)))
+             #f)
          ;; Else, else try moving to the side
-         (and (empty? (grid-get g r left))
+         (and (floats? (grid-get g r left))
               (try-swap! g s r c r left))
-         (and (empty? (grid-get g r right))
+         (and (floats? (grid-get g r right))
               (try-swap! g s r c r right))
          )))
 
@@ -239,6 +255,13 @@
                                     [r integer?]
                                     [c integer?])
       #:doc "Check if a cellule has been moved this step already: return true if it is ok (if it has NOT been moved)"
+      (if (eq? (grid-get (sandbox-data s) r c)  4)
+          (begin
+            (display "delta: ")
+            (display (grid-get (sandbox-delta s) r c))
+            (display " time: ")
+            (display (sandbox-time s))
+            (newline)))
       (if (>= (grid-get (sandbox-delta s) r c)
               (sandbox-time s))
           #f
@@ -252,6 +275,15 @@
                  r
                  c
                  (sandbox-time s)))
+
+    (define-checked (sandbox-number-elements [s sandbox?]
+                                             [x symbol?])
+      #:doc "Returns the number of elements present in sandbox"
+      ;; TODO: make a list of each symbols
+      (let ([x (element->u8 x)])
+        (length 
+         (filter (lambda (v) (eq? (car v) x))
+                 (grid-get-all (sandbox-data s))))))
                                        
     ))
   
